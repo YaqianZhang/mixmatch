@@ -54,7 +54,10 @@ def _load_svhn():
     splits = collections.OrderedDict()
     for split in ['train', 'test', 'extra']:
         with tempfile.NamedTemporaryFile() as f:
-            request.urlretrieve(URLS['svhn'].format(split), f.name)
+            if os.path.exists('cifar10/cifar-10-matlab.tar.gz'):
+                f = open('cifar10/cifar-10-matlab.tar.gz', 'rb')
+            else:
+                request.urlretrieve(URLS['svhn'].format(split), f.name)
             data_dict = scipy.io.loadmat(f.name)
         dataset = {}
         dataset['images'] = np.transpose(data_dict['X'], [3, 0, 1, 2])
@@ -105,12 +108,18 @@ def _load_stl10():
 
 
 def _load_cifar10():
+    print("load cifar10")
     def unflatten(images):
         return np.transpose(images.reshape((images.shape[0], 3, 32, 32)),
                             [0, 2, 3, 1])
 
     with tempfile.NamedTemporaryFile() as f:
-        request.urlretrieve(URLS['cifar10'], f.name)
+        if os.path.exists('cifar10/cifar-10-matlab.tar.gz'):
+            f = open('cifar10/cifar-10-matlab.tar.gz', 'rb')
+        else:
+            request.urlretrieve(URLS['cifar10'], f.name)
+        #request.urlretrieve(URLS['cifar10'], f.name)
+        print("retrieve cifar10")
         tar = tarfile.open(fileobj=f)
         train_data_batches, train_data_labels = [], []
         for batch in range(1, 6):
@@ -126,6 +135,7 @@ def _load_cifar10():
                     'labels': data_dict['labels'].flatten()}
     train_set['images'] = _encode_png(unflatten(train_set['images']))
     test_set['images'] = _encode_png(unflatten(test_set['images']))
+
     return dict(train=train_set, test=test_set)
 
 
@@ -135,7 +145,11 @@ def _load_cifar100():
                             [0, 2, 3, 1])
 
     with tempfile.NamedTemporaryFile() as f:
-        request.urlretrieve(URLS['cifar100'], f.name)
+        if os.path.exists('dataset/cifar-100-matlab.tar.gz'):
+            f = open('dataset/cifar-100-matlab.tar.gz', 'rb')
+        else:
+            request.urlretrieve(URLS['cifar100'], f.name)
+        #request.urlretrieve(URLS['cifar100'], f.name)
         tar = tarfile.open(fileobj=f)
         data_dict = scipy.io.loadmat(tar.extractfile('cifar-100-matlab/train.mat'))
         train_set = {'images': data_dict['data'],
@@ -193,12 +207,12 @@ def _is_installed_folder(name, folder):
 CONFIGS = dict(
     cifar10=dict(loader=_load_cifar10,
                  checksums=dict(train=None, test=None)),
-    cifar100=dict(loader=_load_cifar100,
-                  checksums=dict(train=None, test=None)),
-    svhn=dict(loader=_load_svhn,
-              checksums=dict(train=None, test=None, extra=None)),
-    stl10=dict(loader=_load_stl10,
-               checksums=dict(train=None, test=None)),
+               #cifar100=dict(loader=_load_cifar100,
+               #  checksums=dict(train=None, test=None)),
+               #svhn=dict(loader=_load_svhn,
+               #checksums=dict(train=None, test=None, extra=None)),
+               #stl10=dict(loader=_load_stl10,
+               #checksums=dict(train=None, test=None)),
 )
 
 if __name__ == '__main__':
